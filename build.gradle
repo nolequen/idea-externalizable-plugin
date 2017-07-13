@@ -1,0 +1,16 @@
+plugins {
+  id 'org.jetbrains.intellij' version '0.2.7'
+}
+
+apply plugin: 'java'
+apply plugin: 'org.jetbrains.intellij'
+apply plugin: 'idea'
+
+group 'su.nlq'
+version '0.1'
+
+sourceCompatibility = 1.8
+
+intellij {
+  updateSinceUntilBuild false
+}

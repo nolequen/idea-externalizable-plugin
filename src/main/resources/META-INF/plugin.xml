@@ -1,0 +1,13 @@
+<idea-plugin>
+  <id>ExternalizableGenerator</id>
+  <name>Externalizable Generator</name>
+  <version>0.1</version>
+  <description>Externalizable code generator</description>
+  <idea-version since-build="139.0" />
+  <depends>com.intellij.modules.java</depends>
+  <actions>
+    <action id="su.nlq.idea.externalizable.GenerateAction" class="su.nlq.idea.externalizable.GenerateAction" text="Externalizable">
+      <add-to-group group-id="GenerateGroup" anchor="last" />
+    </action>
+  </actions>
+</idea-plugin>
