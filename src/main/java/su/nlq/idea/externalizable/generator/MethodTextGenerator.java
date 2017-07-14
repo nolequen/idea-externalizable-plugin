@@ -2,11 +2,13 @@ package su.nlq.idea.externalizable.generator;
 
 import com.intellij.psi.CommonClassNames;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiPrimitiveType;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.InheritanceUtil;
 import com.intellij.psi.util.TypeConversionUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -62,6 +64,25 @@ public enum MethodTextGenerator implements Function<Iterable<PsiField>, String> 
       }
     },
 
+    Boxed {
+      @NotNull
+      @Override
+      protected String read(@NotNull String name, @NotNull PsiType type) {
+        return readNullable(Primitive.read(name, unbox(type)));
+      }
+
+      @NotNull
+      @Override
+      protected String write(@NotNull String name, @NotNull PsiType type) {
+        return writeNullable(name, Primitive.write(name, unbox(type)));
+      }
+
+      @NotNull
+      private PsiType unbox(@NotNull PsiType type) {
+        return Optional.<PsiType>ofNullable(PsiPrimitiveType.getOptionallyUnboxedType(type)).orElse(type);
+      }
+    },
+
     Externalizable {
       @NotNull
       @Override
@@ -105,6 +126,9 @@ public enum MethodTextGenerator implements Function<Iterable<PsiField>, String> 
     public static FieldGenerator of(@NotNull PsiType type) {
       if (TypeConversionUtil.isPrimitiveAndNotNull(type)) {
         return Primitive;
+      }
+      if (PsiPrimitiveType.getUnboxedType(type) != null) {
+        return Boxed;
       }
       if (InheritanceUtil.isInheritor(type, CommonClassNames.JAVA_IO_EXTERNALIZABLE)) {
         return Externalizable;
