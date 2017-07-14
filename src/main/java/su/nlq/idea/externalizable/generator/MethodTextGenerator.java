@@ -97,6 +97,20 @@ public enum MethodTextGenerator implements Function<Iterable<PsiField>, String> 
       }
     },
 
+    String {
+      @NotNull
+      @Override
+      protected String read(@NotNull String name, @NotNull PsiType type) {
+        return readNullable(name + " = in.readUTF();\n");
+      }
+
+      @NotNull
+      @Override
+      protected String write(@NotNull String name, @NotNull PsiType type) {
+        return writeNullable(name, "out.writeUTF(" + name + ");\n");
+      }
+    },
+
     Object {
       @NotNull
       @Override
@@ -129,6 +143,9 @@ public enum MethodTextGenerator implements Function<Iterable<PsiField>, String> 
       }
       if (PsiPrimitiveType.getUnboxedType(type) != null) {
         return Boxed;
+      }
+      if (type.getCanonicalText().equals(CommonClassNames.JAVA_LANG_STRING)) {
+        return String;
       }
       if (InheritanceUtil.isInheritor(type, CommonClassNames.JAVA_IO_EXTERNALIZABLE)) {
         return Externalizable;
