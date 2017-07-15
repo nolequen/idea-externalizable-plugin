@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.stream.Stream;
 
-public final class ImplementsExternalizable implements PsiClassModification {
+public final class ImplementExternalizable implements PsiClassModification {
 
   @Override
   public void accept(@NotNull PsiClass psiClass) {

@@ -6,7 +6,10 @@
   <idea-version since-build="139.0" />
   <depends>com.intellij.modules.java</depends>
   <actions>
-    <action id="su.nlq.idea.externalizable.GenerateAction" class="su.nlq.idea.externalizable.GenerateAction" text="Externalizable">
+    <action id="su.nlq.idea.externalizable.GenerateAction"
+            class="su.nlq.idea.externalizable.GenerateAction"
+            text="Externalizable"
+            description="Generate externalizable code">
       <add-to-group group-id="GenerateGroup" anchor="last" />
     </action>
   </actions>

@@ -5,7 +5,6 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +33,7 @@ public final class PsiClassExtractor implements Supplier<Optional<PsiClass>> {
 
   @NotNull
   private Optional<PsiElement> element(int offset) {
-    final PsiFile psiFile = event.getData(CommonDataKeys.PSI_FILE);
-    return psiFile == null ? Optional.empty() : Optional.ofNullable(psiFile.findElementAt(offset));
+    return new PsiJavaFileExtractor(event).get()
+        .flatMap(psiJavaFile -> Optional.ofNullable(psiJavaFile.findElementAt(offset)));
   }
 }
