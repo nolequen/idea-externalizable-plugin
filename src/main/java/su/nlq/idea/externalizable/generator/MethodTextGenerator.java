@@ -111,6 +111,20 @@ public enum MethodTextGenerator implements Function<Iterable<PsiField>, String> 
       }
     },
 
+    Enum {
+      @NotNull
+      @Override
+      protected String read(@NotNull String name, @NotNull PsiType type) {
+        return readNullable(name + " = " + type.getCanonicalText() + ".values()[in.readShort()];\n");
+      }
+
+      @NotNull
+      @Override
+      protected String write(@NotNull String name, @NotNull PsiType type) {
+        return writeNullable(name, "out.writeShort((short) " + name + ".ordinal());\n");
+      }
+    },
+
     Object {
       @NotNull
       @Override
@@ -146,6 +160,9 @@ public enum MethodTextGenerator implements Function<Iterable<PsiField>, String> 
       }
       if (type.getCanonicalText().equals(CommonClassNames.JAVA_LANG_STRING)) {
         return String;
+      }
+      if (TypeConversionUtil.isEnumType(type)) {
+        return Enum;
       }
       if (InheritanceUtil.isInheritor(type, CommonClassNames.JAVA_IO_EXTERNALIZABLE)) {
         return Externalizable;
