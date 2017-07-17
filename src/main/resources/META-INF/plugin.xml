@@ -1,10 +1,15 @@
 <idea-plugin>
-  <id>ExternalizableGenerator</id>
+  <id>su.nlq.idea.ExternalizableGenerator</id>
   <name>Externalizable Generator</name>
   <version>0.1</version>
   <description>Externalizable code generator</description>
+  <description><![CDATA[
+      The plugin allows to generate externalizable code for Java classes easy and safe.
+    ]]></description>
+  <category>Code tools</category>
   <idea-version since-build="139.0" />
   <depends>com.intellij.modules.java</depends>
+  <vendor url="https://github.com/nolequen/idea-externalizable-plugin">Nolequen</vendor>
   <actions>
     <action id="su.nlq.idea.externalizable.GenerateAction"
             class="su.nlq.idea.externalizable.GenerateAction"
