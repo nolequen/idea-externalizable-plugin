@@ -2,7 +2,7 @@
 
 [![Repository](https://img.shields.io/badge/IntelliJ%20IDEA-Plugin-brightgreen.svg?style=flat-square)](https://plugins.jetbrains.com/plugin/9847-externalizable-generator)
 [![GitHub release](https://img.shields.io/github/release/nolequen/idea-externalizable-plugin.svg?style=flat-square)](https://github.com/nolequen/idea-externalizable-plugin/releases/latest)
-[![Codacy](https://img.shields.io/codacy/2e6b7c5cea7c42f4ac2f0c235c9b5609.svg?style=flat-square)](https://www.codacy.com/app/nolequen/idea-externalizable-plugin?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nolequen/idea-externalizable-plugin&amp;utm_campaign=Badge_Grade)
+[![Codebeat](https://codebeat.co/badges/bc0a9319-0682-4db7-97b6-cc9749e44b75)](https://codebeat.co/projects/github-com-nolequen-idea-inspections-plugin-master)
 
 Despite that manual implementation of the [Externalizable](https://docs.oracle.com/javase/8/docs/api/java/io/Externalizable.html "Javadoc") interface gives you complete control in reading and writing objects during Java serialization, it also requires attentiveness and additional work in support.
 
