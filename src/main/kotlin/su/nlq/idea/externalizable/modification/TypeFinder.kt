@@ -8,9 +8,9 @@ import java.util.function.Supplier
 
 class TypeFinder(private val project: Project, private val name: String) : Supplier<PsiClassType> {
 
-  override fun get(): PsiClassType {
-    val scope = GlobalSearchScope.allScope(project)
-    val factory = JavaPsiFacade.getInstance(project).elementFactory
-    return factory.createTypeByFQClassName(name, scope)
-  }
+    override fun get(): PsiClassType {
+        val scope = GlobalSearchScope.allScope(project)
+        val factory = JavaPsiFacade.getInstance(project).elementFactory
+        return factory.createTypeByFQClassName(name, scope)
+    }
 }

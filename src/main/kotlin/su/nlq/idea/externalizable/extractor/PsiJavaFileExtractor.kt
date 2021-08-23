@@ -8,7 +8,7 @@ import java.util.function.Supplier
 
 class PsiJavaFileExtractor(private val event: AnActionEvent) : Supplier<Optional<PsiJavaFile>> {
 
-  override fun get(): Optional<PsiJavaFile> {
-    return Optional.ofNullable(event.getData(CommonDataKeys.PSI_FILE) as? PsiJavaFile)
-  }
+    override fun get(): Optional<PsiJavaFile> {
+        return Optional.ofNullable(event.getData(CommonDataKeys.PSI_FILE) as? PsiJavaFile)
+    }
 }

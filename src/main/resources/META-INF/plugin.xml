@@ -1,21 +1,16 @@
 <idea-plugin>
   <id>su.nlq.idea.ExternalizableGenerator</id>
   <name>Externalizable Generator</name>
-  <version>0.1</version>
   <description>Externalizable code generator</description>
   <description><![CDATA[
 The plugin helps to improve serialization process performance allowing to generate <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Externalizable.html">externalizable</a> code for Java classes. Easy and safe.
     ]]></description>
   <category>Code tools</category>
-  <idea-version since-build="139.0" />
-  <depends>com.intellij.modules.java</depends>
-  <vendor url="https://github.com/nolequen/idea-externalizable-plugin">Nolequen</vendor>
+  <vendor url="nlq.su">Anton Potsyus</vendor>
   <actions>
-    <action id="su.nlq.idea.externalizable.GenerateAction"
-            class="su.nlq.idea.externalizable.GenerateAction"
-            text="Externalizable"
-            description="Generate externalizable code">
-      <add-to-group group-id="GenerateGroup" anchor="last" />
+    <action id="su.nlq.idea.externalizable.GenerateAction" class="su.nlq.idea.externalizable.GenerateAction"
+            text="Externalizable" description="Generate externalizable code">
+      <add-to-group group-id="GenerateGroup" anchor="last"/>
     </action>
   </actions>
 </idea-plugin>

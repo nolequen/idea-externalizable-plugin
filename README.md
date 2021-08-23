@@ -1,7 +1,6 @@
 # IntelliJ IDEA externalizable code generation plugin #
 
-[![Repository](https://img.shields.io/badge/IntelliJ%20IDEA-Plugin-brightgreen.svg?style=flat-square)](https://plugins.jetbrains.com/plugin/9847-externalizable-generator)
-[![GitHub release](https://img.shields.io/github/release/nolequen/idea-externalizable-plugin.svg?style=flat-square)](https://github.com/nolequen/idea-externalizable-plugin/releases/latest)
+[![JetBrains Plugins](https://img.shields.io/jetbrains/plugin/v/9847-externalizable-generator)](https://plugins.jetbrains.com/plugin/9847-externalizable-generator)
 [![Codebeat](https://codebeat.co/badges/814f3f04-8e8c-4f44-8b7d-378d8b11415f)](https://codebeat.co/projects/github-com-nolequen-idea-externalizable-plugin-master)
 
 Despite that manual implementation of the [Externalizable](https://docs.oracle.com/javase/8/docs/api/java/io/Externalizable.html "Javadoc") interface gives you complete control in reading and writing objects during Java serialization, it also requires attentiveness and additional work in support.
