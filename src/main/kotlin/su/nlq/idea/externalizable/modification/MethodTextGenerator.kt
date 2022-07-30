@@ -1,4 +1,4 @@
-package su.nlq.idea.externalizable.generator
+package su.nlq.idea.externalizable.modification
 
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiField

@@ -2,7 +2,6 @@ package su.nlq.idea.externalizable.modification
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import java.util.function.Predicate
 import java.util.stream.Stream
@@ -29,7 +28,7 @@ class CleanupMethods : PsiClassModification {
     }
 
     private class SingleParameterTypeFilter(project: Project, type: String) : Predicate<PsiMethod> {
-        private val type: PsiClassType = TypeFinder(project, type).get()
+        private val type = project.type(type)
 
         override fun test(method: PsiMethod): Boolean {
             val parameters = method.parameterList.parameters

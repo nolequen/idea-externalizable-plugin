@@ -7,9 +7,9 @@ import com.intellij.psi.PsiClass
 class ImplementExternalizable : PsiClassModification {
 
     override fun modify(psiClass: PsiClass) {
-        val externalizable = TypeFinder(psiClass.project, CommonClassNames.JAVA_IO_EXTERNALIZABLE).get()
+        val externalizable = psiClass.project.type(CommonClassNames.JAVA_IO_EXTERNALIZABLE)
 
-        if (!psiClass.implementsListTypes.asList().contains(externalizable)) {
+        if (!psiClass.implementsListTypes.contains(externalizable)) {
             psiClass.implementsList?.add(
                 JavaPsiFacade.getInstance(psiClass.project).elementFactory.createReferenceElementByType(externalizable)
             )

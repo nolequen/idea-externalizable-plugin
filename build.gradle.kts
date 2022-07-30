@@ -1,6 +1,6 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.5.21"
-    id("org.jetbrains.intellij") version "1.1.4"
+    id("org.jetbrains.kotlin.jvm") version "1.7.10"
+    id("org.jetbrains.intellij") version "1.7.0"
 }
 
 group = "su.nlq"
@@ -17,10 +17,10 @@ intellij {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.10")
 }

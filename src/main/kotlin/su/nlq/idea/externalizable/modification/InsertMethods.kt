@@ -2,17 +2,16 @@ package su.nlq.idea.externalizable.modification
 
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiField
+import com.intellij.psi.PsiModifier
 import com.intellij.psi.codeStyle.JavaCodeStyleManager
-import su.nlq.idea.externalizable.generator.MethodTextGenerator
-import java.util.*
 
-class InsertMethods(private val fields: Collection<PsiField>) : PsiClassModification {
+class InsertMethods : PsiClassModification {
 
     override fun modify(psiClass: PsiClass) {
         val elementFactory = JavaPsiFacade.getElementFactory(psiClass.project)
         val codeStyleManager = JavaCodeStyleManager.getInstance(psiClass.project)
-        Arrays.stream(methodGenerators)
+        val fields = fields(psiClass)
+        MethodTextGenerator.values()
             .map { it.apply(fields) }
             .map { elementFactory.createMethodFromText(it, psiClass) }
             .map { psiClass.add(it) }
@@ -20,6 +19,11 @@ class InsertMethods(private val fields: Collection<PsiField>) : PsiClassModifica
     }
 
     companion object {
-        private val methodGenerators = MethodTextGenerator.values()
+        private val forbiddenModifiers = listOf(PsiModifier.TRANSIENT, PsiModifier.STATIC)
+    }
+
+    private fun fields(psiClass: PsiClass) = psiClass.fields.filter {
+        val modifiers = it.modifierList
+        modifiers != null && forbiddenModifiers.none { modifiers.hasModifierProperty(it) }
     }
 }
