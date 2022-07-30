@@ -3,7 +3,6 @@ package su.nlq.idea.externalizable.modification
 import com.intellij.application.options.CodeStyle
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.codeStyle.JavaCodeStyleSettings
 import com.intellij.psi.impl.source.codeStyle.ImportHelper
@@ -12,14 +11,9 @@ import java.io.ObjectInput
 import java.io.ObjectOutput
 import java.util.*
 
-class AddImports(file: PsiFile) : PsiClassModification {
-    private val file: PsiJavaFile
+class AddImports(private val file: PsiJavaFile) : PsiClassModification {
 
-    init {
-        this.file = file as PsiJavaFile
-    }
-
-    override fun accept(psiClass: PsiClass) {
+    override fun modify(psiClass: PsiClass) {
         val project = psiClass.project
         val importHelper = ImportHelper(JavaCodeStyleSettings(CodeStyle.getSettings(project)))
 
@@ -32,7 +26,7 @@ class AddImports(file: PsiFile) : PsiClassModification {
         ).stream()
             .map { TypeFinder(project, it) }
             .map { it.get() }
-            .map { Optional.ofNullable(it.resolve()) }
-            .forEach { it.ifPresent { reference -> importHelper.addImport(file, reference) } }
+            .map { it.resolve() }
+            .forEach { it?.let { reference -> importHelper.addImport(file, reference) } }
     }
 }

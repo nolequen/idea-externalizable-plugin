@@ -3,26 +3,26 @@ package su.nlq.idea.externalizable
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.command.WriteCommandAction
-import su.nlq.idea.externalizable.extractor.PsiClassExtractor
-import su.nlq.idea.externalizable.extractor.PsiJavaFileExtractor
-import su.nlq.idea.externalizable.extractor.SerializableFieldsExtractor
+import su.nlq.idea.externalizable.extractor.PsiClassSupplier
+import su.nlq.idea.externalizable.extractor.PsiJavaFileSupplier
+import su.nlq.idea.externalizable.extractor.SerializableFieldsSupplier
 import su.nlq.idea.externalizable.modification.*
 import java.util.*
 
 class GenerateAction : AnAction() {
 
     override fun actionPerformed(event: AnActionEvent) {
-        PsiClassExtractor(event).get().ifPresent { psiClass ->
-            PsiJavaFileExtractor(event).get().ifPresent { psiJavaFile ->
+        PsiClassSupplier(event).psiClass()?.let { psiClass ->
+            PsiJavaFileSupplier(event).psiJavaFile()?.let { psiJavaFile ->
                 val modifications = Arrays.asList(
                     AddImports(psiJavaFile),
                     CleanupMethods(),
                     NoArgsConstructor(),
                     ImplementExternalizable(),
-                    InsertMethods(SerializableFieldsExtractor(psiClass).get())
+                    InsertMethods(SerializableFieldsSupplier(psiClass).fields())
                 )
                 WriteCommandAction.writeCommandAction(psiClass.project, psiClass.containingFile).run<Throwable> {
-                    modifications.forEach { it.accept(psiClass) }
+                    modifications.forEach { it.modify(psiClass) }
                 }
             }
         }

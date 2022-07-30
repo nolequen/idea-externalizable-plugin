@@ -9,10 +9,9 @@ import java.util.*
 
 class InsertMethods(private val fields: Collection<PsiField>) : PsiClassModification {
 
-    override fun accept(psiClass: PsiClass) {
-        val project = psiClass.project
-        val elementFactory = JavaPsiFacade.getElementFactory(project)
-        val codeStyleManager = JavaCodeStyleManager.getInstance(project)
+    override fun modify(psiClass: PsiClass) {
+        val elementFactory = JavaPsiFacade.getElementFactory(psiClass.project)
+        val codeStyleManager = JavaCodeStyleManager.getInstance(psiClass.project)
         Arrays.stream(methodGenerators)
             .map { it.apply(fields) }
             .map { elementFactory.createMethodFromText(it, psiClass) }

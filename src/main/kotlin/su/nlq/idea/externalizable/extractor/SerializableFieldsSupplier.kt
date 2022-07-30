@@ -6,14 +6,11 @@ import com.intellij.psi.PsiModifier
 import com.intellij.util.containers.stream
 import java.util.*
 import java.util.function.Predicate
-import java.util.function.Supplier
-import java.util.stream.Collectors
+import kotlin.streams.toList
 
-class SerializableFieldsExtractor(private val psiClass: PsiClass) : Supplier<Collection<PsiField>> {
+class SerializableFieldsSupplier(private val psiClass: PsiClass) {
 
-    override fun get(): Collection<PsiField> {
-        return psiClass.fields.stream().filter(ModifiersFilter()).collect(Collectors.toList())
-    }
+    fun fields() = psiClass.fields.stream().filter(ModifiersFilter()).toList()
 
     private class ModifiersFilter : Predicate<PsiField> {
 

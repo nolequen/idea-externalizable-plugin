@@ -9,7 +9,7 @@ import java.util.stream.Stream
 
 class CleanupMethods : PsiClassModification {
 
-    override fun accept(psiClass: PsiClass) {
+    override fun modify(psiClass: PsiClass) {
         val project = psiClass.project
         Stream.of(*psiClass.methods)
             .filter(
@@ -25,9 +25,7 @@ class CleanupMethods : PsiClassModification {
 
     private class MethodNameFilter(private val name: String) : Predicate<PsiMethod> {
 
-        override fun test(method: PsiMethod): Boolean {
-            return method.name == name
-        }
+        override fun test(method: PsiMethod) = method.name == name
     }
 
     private class SingleParameterTypeFilter(project: Project, type: String) : Predicate<PsiMethod> {

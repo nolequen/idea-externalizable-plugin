@@ -7,8 +7,6 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.TypeConversionUtil
 import org.apache.commons.lang.StringUtils.capitalize
-import java.util.*
-import java.util.function.BiFunction
 import java.util.function.Function
 
 enum class MethodTextGenerator : Function<Iterable<PsiField>, String> {
@@ -19,9 +17,7 @@ enum class MethodTextGenerator : Function<Iterable<PsiField>, String> {
                 .append("@Override\n")
                 .append("public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {\n")
             fields.forEach {
-                builder.append(generate(it, Function<FieldGenerator, BiFunction<Optional<String>, PsiType, String>> {
-                    FieldGenerator.read(it)
-                }))
+                builder.append(generate(it, { generator -> { name, type -> generator.read(name, type) } }))
             }
             builder.append('}')
             return builder.toString()
@@ -34,77 +30,51 @@ enum class MethodTextGenerator : Function<Iterable<PsiField>, String> {
                 .append("@Override\n")
                 .append("public void writeExternal(ObjectOutput out) throws IOException {\n")
             fields.forEach {
-                builder.append(generate(it, Function<FieldGenerator, BiFunction<Optional<String>, PsiType, String>> {
-                    FieldGenerator.write(it)
-                }))
+                builder.append(generate(it, { generator -> { name, type -> generator.write(name, type) } }))
             }
             builder.append('}')
             return builder.toString()
         }
     };
 
-    protected final fun generate(
-        field: PsiField,
-        operation: Function<FieldGenerator, BiFunction<Optional<String>, PsiType, String>>
-    ): String {
-        val type = field.type
-        return operation.apply(FieldGenerator.of(type)).apply(Optional.ofNullable(field.name), type)
-    }
+    protected final fun generate(field: PsiField, operation: (FieldGenerator) -> (String, PsiType) -> String) =
+        operation(FieldGenerator.of(field.type))(field.name, field.type)
 
     protected enum class FieldGenerator {
 
         Primitive {
-            override fun read(name: String, type: PsiType): String {
-                return "$name = in.read${capitalize(type.canonicalText)}();\n"
-            }
+            override fun read(name: String, type: PsiType) = "$name = in.read${capitalize(type.canonicalText)}();\n"
 
-            override fun write(name: String, type: PsiType): String {
-                return "out.write${capitalize(type.canonicalText)}($name);\n"
-            }
+            override fun write(name: String, type: PsiType) = "out.write${capitalize(type.canonicalText)}($name);\n"
         },
 
         Boxed {
-            override fun read(name: String, type: PsiType): String {
-                return readNullable(Primitive.read(name, unbox(type)))
-            }
+            override fun read(name: String, type: PsiType) = readNullable(Primitive.read(name, unbox(type)))
 
-            override fun write(name: String, type: PsiType): String {
-                return writeNullable(name, Primitive.write(name, unbox(type)))
-            }
+            override fun write(name: String, type: PsiType) = writeNullable(name, Primitive.write(name, unbox(type)))
 
-            private fun unbox(type: PsiType): PsiType {
-                return Optional.ofNullable<PsiType>(PsiPrimitiveType.getOptionallyUnboxedType(type)).orElse(type)
-            }
+            private fun unbox(type: PsiType) = PsiPrimitiveType.getOptionallyUnboxedType(type) ?: type
         },
 
         Externalizable {
-            override fun read(name: String, type: PsiType): String {
-                return readNullable("$name = new ${type.canonicalText}();\n$name.readExternal(in);\n")
-            }
+            override fun read(name: String, type: PsiType) =
+                readNullable("$name = new ${type.canonicalText}();\n$name.readExternal(in);\n")
 
-            override fun write(name: String, type: PsiType): String {
-                return writeNullable(name, "$name.writeExternal(out);\n")
-            }
+            override fun write(name: String, type: PsiType) = writeNullable(name, "$name.writeExternal(out);\n")
         },
 
         Literal {
-            override fun read(name: String, type: PsiType): String {
-                return readNullable("$name = in.readUTF();\n")
-            }
+            override fun read(name: String, type: PsiType) = readNullable("$name = in.readUTF();\n")
 
-            override fun write(name: String, type: PsiType): String {
-                return writeNullable(name, "out.writeUTF($name);\n")
-            }
+            override fun write(name: String, type: PsiType) = writeNullable(name, "out.writeUTF($name);\n")
         },
 
         Enum {
-            override fun read(name: String, type: PsiType): String {
-                return readNullable("$name = ${type.canonicalText}.values()[in.readShort()];\n")
-            }
+            override fun read(name: String, type: PsiType) =
+                readNullable("$name = ${type.canonicalText}.values()[in.readShort()];\n")
 
-            override fun write(name: String, type: PsiType): String {
-                return writeNullable(name, "out.writeShort((short) $name.ordinal());\n")
-            }
+            override fun write(name: String, type: PsiType) =
+                writeNullable(name, "out.writeShort((short) $name.ordinal());\n")
         },
 
         OrdinaryObject {
@@ -114,56 +84,33 @@ enum class MethodTextGenerator : Function<Iterable<PsiField>, String> {
                 return readNullable("$name = ${castText}in.readObject();\n")
             }
 
-            override fun write(name: String, type: PsiType): String {
-                return writeNullable(name, "out.writeObject($name);\n")
-            }
+            override fun write(name: String, type: PsiType) = writeNullable(name, "out.writeObject($name);\n")
         };
 
-        protected abstract fun read(name: String, type: PsiType): String
+        abstract fun read(name: String, type: PsiType): String
 
-        protected abstract fun write(name: String, type: PsiType): String
+        abstract fun write(name: String, type: PsiType): String
 
         companion object {
 
-            fun write(generator: FieldGenerator): BiFunction<Optional<String>, PsiType, String> {
-                return BiFunction { name, type -> name.map { generator.write(it, type) }.orElse("") }
+            fun of(type: PsiType) = when {
+                TypeConversionUtil.isPrimitiveAndNotNull(type) -> Primitive
+                PsiPrimitiveType.getUnboxedType(type) != null -> Boxed
+                type.canonicalText == CommonClassNames.JAVA_LANG_STRING -> Literal
+                TypeConversionUtil.isEnumType(type) -> Enum
+                InheritanceUtil.isInheritor(type, CommonClassNames.JAVA_IO_EXTERNALIZABLE) -> Externalizable
+                else -> OrdinaryObject
             }
 
-            fun read(generator: FieldGenerator): BiFunction<Optional<String>, PsiType, String> {
-                return BiFunction { name, type -> name.map { generator.read(it, type) }.orElse("") }
-            }
+            private fun readNullable(readText: String) = "if (in.readBoolean()) {\n$readText}\n"
 
-            fun of(type: PsiType): FieldGenerator {
-                if (TypeConversionUtil.isPrimitiveAndNotNull(type)) {
-                    return Primitive
-                }
-                if (PsiPrimitiveType.getUnboxedType(type) != null) {
-                    return Boxed
-                }
-                if (type.canonicalText == CommonClassNames.JAVA_LANG_STRING) {
-                    return Literal
-                }
-                if (TypeConversionUtil.isEnumType(type)) {
-                    return Enum
-                }
-                if (InheritanceUtil.isInheritor(type, CommonClassNames.JAVA_IO_EXTERNALIZABLE)) {
-                    return Externalizable
-                }
-                return OrdinaryObject
-            }
-
-            private fun readNullable(readText: String): String {
-                return "if (in.readBoolean()) {\n$readText}\n"
-            }
-
-            private fun writeNullable(name: String, writeText: String): String {
-                return "if ($name == null) {\n" +
+            private fun writeNullable(name: String, writeText: String) =
+                "if ($name == null) {\n" +
                         "out.writeBoolean(false);\n" +
                         "} else {\n" +
                         "out.writeBoolean(true);\n" +
                         "$writeText" +
                         "}\n"
-            }
         }
     }
 }
