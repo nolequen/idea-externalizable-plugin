@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin require-restart="false">
   <id>su.nlq.idea.ExternalizableGenerator</id>
   <name>Externalizable Generator</name>
   <description>Externalizable code generator</description>
@@ -7,6 +7,8 @@ The plugin helps to improve serialization process performance allowing to genera
     ]]></description>
   <category>Code tools</category>
   <vendor url="nlq.su">Anton Potsyus</vendor>
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.java</depends>
   <actions>
     <action id="su.nlq.idea.externalizable.GenerateAction" class="su.nlq.idea.externalizable.GenerateAction"
             text="Externalizable" description="Generate externalizable code">
