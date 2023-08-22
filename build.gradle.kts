@@ -1,6 +1,6 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.10"
-    id("org.jetbrains.intellij") version "1.7.0"
+    id("org.jetbrains.kotlin.jvm") version "1.8.22"
+    id("org.jetbrains.intellij") version "1.15.0"
 }
 
 group = "su.nlq"
@@ -12,7 +12,7 @@ repositories {
 
 intellij {
     plugins.add("java")
-    version.set("2022.2")
+    version.set("2023.2")
     instrumentCode.set(false)
 }
 
@@ -22,5 +22,5 @@ java {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.10")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.22")
 }

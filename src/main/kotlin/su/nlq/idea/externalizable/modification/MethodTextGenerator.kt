@@ -1,116 +1,134 @@
 package su.nlq.idea.externalizable.modification
 
-import com.intellij.psi.CommonClassNames
-import com.intellij.psi.PsiField
-import com.intellij.psi.PsiPrimitiveType
-import com.intellij.psi.PsiType
+import com.intellij.psi.*
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.TypeConversionUtil
 import org.apache.commons.lang.StringUtils.capitalize
-import java.util.function.Function
 
-enum class MethodTextGenerator : Function<Iterable<PsiField>, String> {
+class MethodTextGenerator(psiClass: PsiClass) {
 
-    Read {
-        override fun apply(fields: Iterable<PsiField>): String {
-            val builder = StringBuilder()
+    companion object {
+        private val forbiddenModifiers = listOf(PsiModifier.TRANSIENT, PsiModifier.STATIC)
+    }
+
+    private val fields = psiClass.fields
+            .filter {
+                val modifiers = it.modifierList
+                modifiers != null && forbiddenModifiers.none { modifiers.hasModifierProperty(it) }
+            }.map {
+                when {
+                    TypeConversionUtil.isPrimitiveAndNotNull(it.type) -> Primitive(it.name, it.type)
+                    PsiPrimitiveType.getUnboxedType(it.type) != null -> Nullable(it.name, Boxed(it.name, it.type))
+                    it.type.canonicalText == CommonClassNames.JAVA_LANG_STRING -> Nullable(it.name, Literal(it.name))
+                    TypeConversionUtil.isEnumType(it.type) -> Nullable(it.name, Enum(it.name, it.type))
+                    InheritanceUtil.isInheritor(
+                            it.type,
+                            CommonClassNames.JAVA_IO_EXTERNALIZABLE
+                    ) -> Nullable(it.name, Externalizable(it.name, it.type))
+
+                    else -> Nullable(it.name, OrdinaryObject(it.name, it.type))
+                }
+            }
+
+    fun read(): String {
+        val builder = StringBuilder()
                 .append("@Override\n")
                 .append("public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {\n")
-            fields.forEach {
-                builder.append(generate(it, { generator -> { name, type -> generator.read(name, type) } }))
-            }
-            builder.append('}')
-            return builder.toString()
-        }
-    },
+        fields.forEach { builder.append(it.read()) }
+        builder.append('}')
+        return builder.toString()
+    }
 
-    Write {
-        override fun apply(fields: Iterable<PsiField>): String {
-            val builder = StringBuilder()
+    fun write(): String {
+        val builder = StringBuilder()
                 .append("@Override\n")
                 .append("public void writeExternal(ObjectOutput out) throws IOException {\n")
-            fields.forEach {
-                builder.append(generate(it, { generator -> { name, type -> generator.write(name, type) } }))
-            }
-            builder.append('}')
-            return builder.toString()
-        }
-    };
-
-    protected final fun generate(field: PsiField, operation: (FieldGenerator) -> (String, PsiType) -> String) =
-        operation(FieldGenerator.of(field.type))(field.name, field.type)
-
-    protected enum class FieldGenerator {
-
-        Primitive {
-            override fun read(name: String, type: PsiType) = "$name = in.read${capitalize(type.canonicalText)}();\n"
-
-            override fun write(name: String, type: PsiType) = "out.write${capitalize(type.canonicalText)}($name);\n"
-        },
-
-        Boxed {
-            override fun read(name: String, type: PsiType) = readNullable(Primitive.read(name, unbox(type)))
-
-            override fun write(name: String, type: PsiType) = writeNullable(name, Primitive.write(name, unbox(type)))
-
-            private fun unbox(type: PsiType) = PsiPrimitiveType.getOptionallyUnboxedType(type) ?: type
-        },
-
-        Externalizable {
-            override fun read(name: String, type: PsiType) =
-                readNullable("$name = new ${type.canonicalText}();\n$name.readExternal(in);\n")
-
-            override fun write(name: String, type: PsiType) = writeNullable(name, "$name.writeExternal(out);\n")
-        },
-
-        Literal {
-            override fun read(name: String, type: PsiType) = readNullable("$name = in.readUTF();\n")
-
-            override fun write(name: String, type: PsiType) = writeNullable(name, "out.writeUTF($name);\n")
-        },
-
-        Enum {
-            override fun read(name: String, type: PsiType) =
-                readNullable("$name = ${type.canonicalText}.values()[in.readShort()];\n")
-
-            override fun write(name: String, type: PsiType) =
-                writeNullable(name, "out.writeShort((short) $name.ordinal());\n")
-        },
-
-        OrdinaryObject {
-            override fun read(name: String, type: PsiType): String {
-                val typeText = type.canonicalText
-                val castText = if (typeText == CommonClassNames.JAVA_LANG_OBJECT) "" else "($typeText) "
-                return readNullable("$name = ${castText}in.readObject();\n")
-            }
-
-            override fun write(name: String, type: PsiType) = writeNullable(name, "out.writeObject($name);\n")
-        };
-
-        abstract fun read(name: String, type: PsiType): String
-
-        abstract fun write(name: String, type: PsiType): String
-
-        companion object {
-
-            fun of(type: PsiType) = when {
-                TypeConversionUtil.isPrimitiveAndNotNull(type) -> Primitive
-                PsiPrimitiveType.getUnboxedType(type) != null -> Boxed
-                type.canonicalText == CommonClassNames.JAVA_LANG_STRING -> Literal
-                TypeConversionUtil.isEnumType(type) -> Enum
-                InheritanceUtil.isInheritor(type, CommonClassNames.JAVA_IO_EXTERNALIZABLE) -> Externalizable
-                else -> OrdinaryObject
-            }
-
-            private fun readNullable(readText: String) = "if (in.readBoolean()) {\n$readText}\n"
-
-            private fun writeNullable(name: String, writeText: String) =
-                "if ($name == null) {\n" +
-                        "out.writeBoolean(false);\n" +
-                        "} else {\n" +
-                        "out.writeBoolean(true);\n" +
-                        "$writeText" +
-                        "}\n"
-        }
+        fields.forEach { builder.append(it.write()) }
+        builder.append('}')
+        return builder.toString()
     }
+}
+
+private sealed class Field() {
+
+    abstract fun read(): String
+
+    abstract fun write(): String
+}
+
+private class Nullable(
+        private val name: String,
+        private val field: Field
+) : Field() {
+
+    override fun read() = "if (in.readBoolean()) {\n${field.read()}}\n"
+
+    override fun write() = "if ($name == null) {\n" +
+            "out.writeBoolean(false);\n" +
+            "} else {\n" +
+            "out.writeBoolean(true);\n" +
+            "${field.write()}" +
+            "}\n"
+}
+
+private class Primitive(
+        private val name: String,
+        private val type: PsiType
+) : Field() {
+
+    override fun read() = "$name = in.read${capitalize(type.canonicalText)}();"
+
+    override fun write() = "out.write${capitalize(type.canonicalText)}($name);"
+}
+
+private class Boxed(name: String, type: PsiType) : Field() {
+
+    private val primitive = Primitive(name, PsiPrimitiveType.getOptionallyUnboxedType(type) ?: type)
+
+    override fun read() = primitive.read()
+
+    override fun write() = primitive.write()
+}
+
+private class Externalizable(
+        private val name: String,
+        private val type: PsiType
+) : Field() {
+
+    override fun read() = "$name = new ${type.canonicalText}();\n$name.readExternal(in);"
+
+    override fun write() = "$name.writeExternal(out);"
+}
+
+private class Literal(
+        private val name: String
+) : Field() {
+
+    override fun read() = "$name = in.readUTF();"
+
+    override fun write() = "out.writeUTF($name);"
+}
+
+private class Enum(
+        private val name: String,
+        private val type: PsiType
+) : Field() {
+
+    override fun read() = "$name = ${type.canonicalText}.values()[in.readShort()];"
+
+    override fun write() = "out.writeShort((short) $name.ordinal());"
+}
+
+private class OrdinaryObject(
+        private val name: String,
+        private val type: PsiType
+) : Field() {
+
+    override fun read(): String {
+        val typeText = type.canonicalText
+        val castText = if (typeText == CommonClassNames.JAVA_LANG_OBJECT) "" else "($typeText) "
+        return "$name = ${castText}in.readObject();"
+    }
+
+    override fun write() = "out.writeObject($name);"
 }
